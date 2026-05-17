@@ -16,6 +16,13 @@
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="8.0.27" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
 
+    <!-- Application layer: validation, DI scanning, logging abstractions -->
+    <PackageVersion Include="FluentValidation" Version="11.10.0" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.10.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+    <PackageVersion Include="Scrutor" Version="4.2.2" />
+
     <!-- Test stack (referenced via tests/Directory.Build.props) -->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageVersion Include="xunit" Version="2.5.3" />

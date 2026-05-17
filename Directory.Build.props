@@ -15,8 +15,20 @@
     <AnalysisMode>Recommended</AnalysisMode>
     <IsPackable>false</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <!-- Suppress "missing XML doc comment" warning; we still get the .xml for Swagger. -->
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <!--
+      Suppressed warnings:
+        CS1591 - missing XML doc (we still emit .xml for Swagger; XML docs are opt-in).
+        CA1062 - validate args not null on public APIs (DI guarantees non-null; checks would be noise).
+        CA1812 - uninstantiated internal types (DI-registered classes appear unused to the analyzer).
+        CA1711 - identifier specific suffix ('Enum', 'Delegate'); the patterns naming them this
+                 way (SmartEnum, RequestHandlerDelegate) are intentional and recognised by .NET devs.
+        CA1716 - parameter name conflicts with reserved keyword ('next', 'event'); only relevant
+                 for cross-language consumers (VB), which we don't target.
+        CA1848 - use LoggerMessage source-generated delegates instead of LogInformation extensions;
+                 revisit only if profiling shows logging is on a hot path.
+        CA1805 - explicit `= default` initialisation; sometimes intentional for clarity (e.g. Unit.Value).
+    -->
+    <NoWarn>$(NoWarn);CS1591;CA1062;CA1812;CA1711;CA1716;CA1848;CA1805</NoWarn>
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
