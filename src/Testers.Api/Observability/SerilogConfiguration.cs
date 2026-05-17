@@ -1,5 +1,4 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
 
@@ -13,7 +12,7 @@ namespace Testers.Api.Observability;
 /// </summary>
 public static class SerilogConfiguration
 {
-    public static void Configure(LoggerConfiguration cfg, WebHostBuilderContext ctx)
+    public static void Configure(LoggerConfiguration cfg, HostBuilderContext ctx)
     {
         cfg
             .ReadFrom.Configuration(ctx.Configuration)
