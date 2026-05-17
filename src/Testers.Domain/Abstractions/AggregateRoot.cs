@@ -13,7 +13,7 @@ namespace Testers.Domain.Abstractions;
 /// SAME <c>SaveChangesAsync</c> call and written to the outbox table atomically with the business
 /// changes — see <see cref="IDomainEvent"/>.
 /// </summary>
-public abstract class AggregateRoot<TId> : Entity<TId>, IAuditable
+public abstract class AggregateRoot<TId> : Entity<TId>, IAuditable, IAggregateRoot
     where TId : struct, IEquatable<TId>
 {
     private readonly List<IDomainEvent> _domainEvents = new();
