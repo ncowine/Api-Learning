@@ -34,6 +34,7 @@
     <PackageVersion Include="Microsoft.Extensions.Options" Version="8.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
     <PackageVersion Include="RabbitMQ.Client" Version="6.8.1" />
+    <PackageVersion Include="StackExchange.Redis" Version="2.7.33" />
 
     <!-- Test stack (referenced via tests/Directory.Build.props) -->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />

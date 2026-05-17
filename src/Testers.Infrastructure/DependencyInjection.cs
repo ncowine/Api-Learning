@@ -2,8 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MySqlConnector;
+using StackExchange.Redis;
 using Testers.Application.Abstractions;
 using Testers.Infrastructure.Audit;
+using Testers.Infrastructure.Cache;
 using Testers.Infrastructure.Dispatching;
 using Testers.Infrastructure.Messaging;
 using Testers.Infrastructure.Outbox;
@@ -54,6 +56,18 @@ public static class DependencyInjection
         services.Configure<RabbitOptions>(configuration.GetSection(RabbitOptions.SectionName));
         services.AddSingleton<RabbitConnectionFactory>();
         services.AddHostedService<OutboxPublisher>();
+
+        // ---- Cache (sub-step c): Redis-backed generic ICache ----
+        // The vendored CacheRepository library (Cache/Library/) is available separately for
+        // typed per-entity caches with concurrent-fetch coalescing — feature slices subclass
+        // DataCache<TKey,TValue> and register their cache class directly.
+        services.Configure<RedisCacheOptions>(configuration.GetSection(RedisCacheOptions.SectionName));
+        services.AddSingleton<IConnectionMultiplexer>(sp =>
+        {
+            var opts = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RedisCacheOptions>>().Value;
+            return ConnectionMultiplexer.Connect(opts.ConnectionString);
+        });
+        services.AddSingleton<ICache, RedisCache>();
 
         return services;
     }

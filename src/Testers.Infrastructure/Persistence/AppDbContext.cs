@@ -1,6 +1,8 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Testers.Infrastructure.Audit;
+using Testers.Infrastructure.Auth;
 using Testers.Infrastructure.Outbox;
 
 namespace Testers.Infrastructure.Persistence;
@@ -30,6 +32,8 @@ public sealed class AppDbContext : DbContext
     public DbSet<InboxMessage> Inbox => Set<InboxMessage>();
 
     public DbSet<AuditLog> AuditLog => Set<AuditLog>();
+
+    public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -69,6 +73,28 @@ public sealed class AppDbContext : DbContext
             b.Property(a => a.CorrelationId).HasMaxLength(100);
             b.HasIndex(a => new { a.EntityType, a.EntityKey });
             b.HasIndex(a => a.OccurredAt);
+        });
+
+        var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+
+        modelBuilder.Entity<ApiKey>(b =>
+        {
+            b.ToTable("api_key", schema);
+            b.HasKey(k => k.Id);
+            b.Property(k => k.Label).HasMaxLength(200).IsRequired();
+            b.Property(k => k.KeyHash).HasMaxLength(128).IsRequired();
+            b.HasIndex(k => k.KeyHash).IsUnique();
+            b.Property(k => k.Prefix).HasMaxLength(20).IsRequired();
+            b.Property(k => k.OwnerId).HasMaxLength(200).IsRequired();
+            b.Property(k => k.Scopes)
+                .HasColumnType("json")
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, jsonOptions),
+                    v => JsonSerializer.Deserialize<List<string>>(v, jsonOptions) ?? new List<string>(),
+                    new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<IReadOnlyList<string>>(
+                        (a, b) => (a ?? new List<string>()).SequenceEqual(b ?? new List<string>()),
+                        v => v.Aggregate(0, (h, s) => HashCode.Combine(h, s.GetHashCode(StringComparison.Ordinal))),
+                        v => v.ToList()));
         });
 
         modelBuilder.ApplySnakeCaseNames();
