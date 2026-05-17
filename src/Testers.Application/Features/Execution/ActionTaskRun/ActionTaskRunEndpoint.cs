@@ -7,11 +7,14 @@ namespace Testers.Application.Features.Execution.ActionTaskRun;
 
 public sealed class ActionTaskRunEndpoint : IEndpoint
 {
+    // HTTP body shape. Nested so we don't pay for a separate file for ~3 properties.
+    public sealed record Body(Guid BuildId, string Outcome, string? Note);
+
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/tasks/{taskDefinitionId:guid}/runs",
                 async (Guid taskDefinitionId,
-                       ActionTaskRunRequest body,
+                       Body body,
                        IDispatcher dispatcher,
                        CancellationToken ct) =>
                 {
