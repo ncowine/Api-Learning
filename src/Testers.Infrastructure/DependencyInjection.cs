@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using MySqlConnector;
 using StackExchange.Redis;
 using Testers.Application.Abstractions;
@@ -30,10 +31,8 @@ public static class DependencyInjection
         services.AddScoped<AuditInterceptor>();
         services.AddScoped<OutboxInterceptor>();
 
-        // MySQL 8.0.30 pinned for now; integration tests can flip to ServerVersion.AutoDetect.
-        var serverVersion = new MySqlServerVersion(new Version(8, 0, 30));
-        services.AddDbContext<AppDbContext>((sp, options) => ConfigureMySql(sp, options, serverVersion));
-        services.AddDbContext<TestPlanDbContext>((sp, options) => ConfigureMySql(sp, options, serverVersion));
+        services.AddDbContext<AppDbContext>((sp, opts) => ConfigureDbContext(sp, opts, nameof(AppDbContext)));
+        services.AddDbContext<TestPlanDbContext>((sp, opts) => ConfigureDbContext(sp, opts, nameof(TestPlanDbContext)));
 
         // Expose DbContexts via Application interfaces so handlers don't reference Infrastructure types.
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
@@ -52,7 +51,7 @@ public static class DependencyInjection
         // Redis. Typed in-memory caches use DataCache<,> from Cache/Library/ directly.
         services.AddSingleton<IConnectionMultiplexer>(sp =>
         {
-            var opts = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RedisCacheOptions>>().Value;
+            var opts = sp.GetRequiredService<IOptions<RedisCacheOptions>>().Value;
             return ConnectionMultiplexer.Connect(opts.ConnectionString);
         });
         services.AddSingleton<ICache, RedisCache>();
@@ -60,13 +59,28 @@ public static class DependencyInjection
         return services;
     }
 
-    private static void ConfigureMySql(IServiceProvider sp, DbContextOptionsBuilder options, MySqlServerVersion version)
+    private static void ConfigureDbContext(IServiceProvider sp, DbContextOptionsBuilder options, string contextName)
     {
         var shared = sp.GetRequiredService<SharedConnection>();
-        // Sync open in DI factory: once per scope (HTTP request). Known compromise for
-        // sharing one DbConnection across both DbContexts.
+        var dbOptions = sp.GetRequiredService<IOptions<DatabaseOptions>>().Value;
         var connection = shared.GetOpenAsync().AsTask().GetAwaiter().GetResult();
-        options.UseMySql(connection, version);
+
+        switch (dbOptions.Provider)
+        {
+            case DbProvider.Sqlite:
+                // Per-context migrations history table so both contexts share one SQLite file
+                // without colliding on the default __EFMigrationsHistory.
+                options.UseSqlite(connection, b =>
+                    b.MigrationsHistoryTable($"__ef_migrations_{contextName.ToLowerInvariant()}"));
+                break;
+            case DbProvider.MySql:
+                // Pin to 8.0.30 for now; flip to ServerVersion.AutoDetect against a real instance.
+                options.UseMySql(connection, new MySqlServerVersion(new Version(8, 0, 30)));
+                break;
+            default:
+                throw new InvalidOperationException($"Unknown DbProvider: {dbOptions.Provider}");
+        }
+
         options.AddInterceptors(
             sp.GetRequiredService<AuditInterceptor>(),
             sp.GetRequiredService<OutboxInterceptor>());

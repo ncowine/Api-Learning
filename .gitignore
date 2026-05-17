@@ -483,3 +483,9 @@ $RECYCLE.BIN/
 
 # Local Claude Code settings (not shared)
 .claude/
+
+# Local SQLite files (created by EF migrations / dotnet run)
+*.db
+*.db-shm
+*.db-wal
+

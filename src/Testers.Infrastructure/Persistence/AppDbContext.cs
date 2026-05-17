@@ -36,7 +36,7 @@ public sealed class AppDbContext : DbContext, IAppDbContext
             b.HasKey(o => o.Id);
             b.Property(o => o.EventType).HasMaxLength(300).IsRequired();
             b.Property(o => o.RoutingKey).HasMaxLength(200).IsRequired();
-            b.Property(o => o.Payload).HasColumnType("json").IsRequired();
+            b.Property(o => o.Payload).IsRequired();   // JSON-encoded; TEXT on Sqlite, longtext on MySQL
             b.Property(o => o.CorrelationId).HasMaxLength(100);
             b.Property(o => o.LastError).HasMaxLength(2000);
             // Index covers the publisher's poll query: WHERE processed_at IS NULL ORDER BY occurred_at.
@@ -59,7 +59,7 @@ public sealed class AppDbContext : DbContext, IAppDbContext
             b.Property(a => a.Action).HasMaxLength(20).IsRequired();
             b.Property(a => a.UserId).HasMaxLength(200).IsRequired();
             b.Property(a => a.UserDisplayName).HasMaxLength(300).IsRequired();
-            b.Property(a => a.StateJson).HasColumnType("json");
+            b.Property(a => a.StateJson);
             b.Property(a => a.CorrelationId).HasMaxLength(100);
             b.HasIndex(a => new { a.EntityType, a.EntityKey });
             b.HasIndex(a => a.OccurredAt);
@@ -77,7 +77,6 @@ public sealed class AppDbContext : DbContext, IAppDbContext
             b.Property(k => k.Prefix).HasMaxLength(20).IsRequired();
             b.Property(k => k.OwnerId).HasMaxLength(200).IsRequired();
             b.Property(k => k.Scopes)
-                .HasColumnType("json")
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, jsonOptions),
                     v => JsonSerializer.Deserialize<List<string>>(v, jsonOptions) ?? new List<string>(),

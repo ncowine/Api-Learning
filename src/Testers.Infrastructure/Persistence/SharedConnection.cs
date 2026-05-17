@@ -1,28 +1,36 @@
 using System.Data.Common;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Options;
 using MySqlConnector;
 
 namespace Testers.Infrastructure.Persistence;
 
-// Per-request scoped. Both DbContexts pull their MySqlConnection from here so cross-DB writes
-// can share one transaction on the same MySQL server. UnitOfWork drives Begin/Commit/Rollback.
+// Per-request scoped. Both DbContexts pull their DbConnection from here so cross-DB writes
+// can sit in one transaction. For SQLite, both contexts live in the same file; for MySQL,
+// they're separate schemas on the same server.
 public sealed class SharedConnection(IOptions<DatabaseOptions> options) : IAsyncDisposable
 {
-    private readonly string _connectionString = options.Value.ConnectionString;
-    private MySqlConnection? _connection;
+    private readonly DatabaseOptions _options = options.Value;
+    private DbConnection? _connection;
     private DbTransaction? _transaction;
 
     public async ValueTask<DbConnection> GetOpenAsync(CancellationToken ct = default)
     {
         if (_connection is null)
         {
-            _connection = new MySqlConnection(_connectionString);
+            _connection = _options.Provider switch
+            {
+                DbProvider.Sqlite => new SqliteConnection(_options.ConnectionString),
+                DbProvider.MySql => new MySqlConnection(_options.ConnectionString),
+                _ => throw new InvalidOperationException($"Unknown DbProvider: {_options.Provider}"),
+            };
             await _connection.OpenAsync(ct);
         }
         else if (_connection.State != System.Data.ConnectionState.Open)
         {
             await _connection.OpenAsync(ct);
         }
+
         return _connection;
     }
 
