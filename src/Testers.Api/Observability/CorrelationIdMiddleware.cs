@@ -3,19 +3,11 @@ using Serilog.Context;
 
 namespace Testers.Api.Observability;
 
-/// <summary>
-/// Ensures every request has a correlation id. Reads <c>X-Correlation-Id</c> from the request
-/// (clients can supply one to stitch a multi-call workflow); generates a fresh GUID if absent.
-/// Pushes it to Serilog's <see cref="LogContext"/> so every log line in the request scope is
-/// enriched automatically — including DB queries and outbox message headers.
-/// </summary>
-public sealed class CorrelationIdMiddleware
+// Reads X-Correlation-Id from the request (clients can supply) or generates one. Pushes into
+// Serilog's LogContext so every log line in the scope is enriched.
+public sealed class CorrelationIdMiddleware(RequestDelegate next)
 {
     public const string HeaderName = "X-Correlation-Id";
-
-    private readonly RequestDelegate _next;
-
-    public CorrelationIdMiddleware(RequestDelegate next) => _next = next;
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -28,8 +20,6 @@ public sealed class CorrelationIdMiddleware
         context.Items[HeaderName] = correlationId;
 
         using (LogContext.PushProperty("CorrelationId", correlationId))
-        {
-            await _next(context).ConfigureAwait(false);
-        }
+            await next(context);
     }
 }

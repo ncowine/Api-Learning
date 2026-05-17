@@ -5,11 +5,8 @@ using Testers.Application.Abstractions;
 
 namespace Testers.Api.Endpoints;
 
-/// <summary>
-/// Auto-registers + maps every <see cref="IEndpoint"/> implementation in the Application assembly.
-/// Feature slices don't have to touch Program.cs — drop a class implementing
-/// <see cref="IEndpoint"/> next to a handler and it's reachable at startup.
-/// </summary>
+// Scans the Application assembly for IEndpoint impls, registers them singleton, then maps
+// each under /api/v1. Adding a slice = drop a file + run.
 public static class EndpointScanner
 {
     public static IServiceCollection AddEndpointScanning(this IServiceCollection services)
@@ -22,16 +19,11 @@ public static class EndpointScanner
         return services;
     }
 
-    /// <summary>Maps all registered <see cref="IEndpoint"/> contributors under the given route group.</summary>
     public static IEndpointRouteBuilder MapDiscoveredEndpoints(this WebApplication app, string routePrefix = "/api/v1")
     {
         var group = app.MapGroup(routePrefix);
-        var endpoints = app.Services.GetServices<IEndpoint>();
-        foreach (var endpoint in endpoints)
-        {
+        foreach (var endpoint in app.Services.GetServices<IEndpoint>())
             endpoint.MapEndpoint(group);
-        }
-
         return app;
     }
 }

@@ -9,21 +9,12 @@ using Testers.Infrastructure.Persistence;
 
 namespace Testers.Infrastructure.Outbox;
 
-/// <summary>
-/// EF Core <see cref="SaveChangesInterceptor"/> that captures <see cref="IDomainEvent"/>s off any
-/// tracked <see cref="IAggregateRoot"/> in EITHER DbContext, serialises them, and adds
-/// <see cref="OutboxMessage"/> rows to <see cref="AppDbContext"/>. Events are cleared from the
-/// aggregate after queuing so re-saves don't duplicate.
-///
-/// Lifecycle: scoped. Lazy-resolves DbContexts via <see cref="IServiceProvider"/> to avoid the
-/// DI cycle (DbContext registers this interceptor, this interceptor needs DbContexts).
-///
-/// IMPORTANT: when this interceptor fires for <c>TestPlanDbContext.SaveChangesAsync</c>, the
-/// OutboxMessage rows are *queued* into <c>AppDbContext.ChangeTracker</c> but not committed.
-/// The handler / <c>UnitOfWorkBehavior</c> must call <c>appDb.SaveChangesAsync</c> within the
-/// same shared transaction for the outbox rows to land. (In practice handlers that write
-/// cross-DB end with both <c>SaveChangesAsync</c> calls before the UoW commits.)
-/// </summary>
+// Walks both DbContexts on each SaveChanges, serialises domain events from aggregates, queues
+// OutboxMessage rows into AppDb. Lazy IServiceProvider injection avoids the DI cycle (DbContext
+// registers this; this needs DbContexts).
+//
+// When firing on TestPlanDbContext, rows go into AppDb's tracker but won't commit until the
+// caller also saves AppDb. Handlers writing cross-DB end with both SaveChangesAsync calls.
 internal sealed class OutboxInterceptor(IServiceProvider services, IClock clock) : SaveChangesInterceptor
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -33,37 +24,24 @@ internal sealed class OutboxInterceptor(IServiceProvider services, IClock clock)
         InterceptionResult<int> result,
         CancellationToken cancellationToken = default)
     {
-        if (eventData.Context is not null)
-        {
-            EmitOutboxRows(eventData.Context);
-        }
-
+        if (eventData.Context is not null) EmitOutboxRows(eventData.Context);
         return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
-    public override InterceptionResult<int> SavingChanges(
-        DbContextEventData eventData,
-        InterceptionResult<int> result)
+    public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
     {
-        if (eventData.Context is not null)
-        {
-            EmitOutboxRows(eventData.Context);
-        }
-
+        if (eventData.Context is not null) EmitOutboxRows(eventData.Context);
         return base.SavingChanges(eventData, result);
     }
 
-    // 'clock' is part of the constructor in case we later want to override OccurredAt for tests;
-    // currently we trust the event's own OccurredAt (set by the aggregate when raising).
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060",
-        Justification = "Reserved for future use (override OccurredAt for replay scenarios).")]
+    // clock kept on the ctor for future use (replay scenarios overriding OccurredAt).
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060", Justification = "reserved")]
     private void EmitOutboxRows(DbContext savingContext)
     {
-        _ = clock; // suppress 'field never used' until clock-driven OccurredAt override is needed
-        var contextsToScan = GetAllScopedContexts(savingContext).ToArray();
+        _ = clock;
         var rows = new List<OutboxMessage>();
 
-        foreach (var ctx in contextsToScan)
+        foreach (var ctx in ScopedContexts(savingContext))
         {
             var roots = ctx.ChangeTracker.Entries()
                 .Where(e => e.Entity is IAggregateRoot root && root.DomainEvents.Count > 0)
@@ -82,63 +60,39 @@ internal sealed class OutboxInterceptor(IServiceProvider services, IClock clock)
                         evt.OccurredAt,
                         correlationId: null));
                 }
-
                 root.ClearDomainEvents();
             }
         }
 
-        if (rows.Count == 0)
-        {
-            return;
-        }
-
-        var appDb = services.GetRequiredService<AppDbContext>();
-        appDb.Outbox.AddRange(rows);
+        if (rows.Count == 0) return;
+        services.GetRequiredService<AppDbContext>().Outbox.AddRange(rows);
     }
 
-    /// <summary>Yields both DbContexts in scope; the saving context first to avoid double-resolution.</summary>
-    private IEnumerable<DbContext> GetAllScopedContexts(DbContext savingContext)
+    private IEnumerable<DbContext> ScopedContexts(DbContext savingContext)
     {
         yield return savingContext;
 
         var appDb = services.GetService<AppDbContext>();
-        if (appDb is not null && !ReferenceEquals(appDb, savingContext))
-        {
-            yield return appDb;
-        }
+        if (appDb is not null && !ReferenceEquals(appDb, savingContext)) yield return appDb;
 
         var testPlanDb = services.GetService<TestPlanDbContext>();
-        if (testPlanDb is not null && !ReferenceEquals(testPlanDb, savingContext))
-        {
-            yield return testPlanDb;
-        }
+        if (testPlanDb is not null && !ReferenceEquals(testPlanDb, savingContext)) yield return testPlanDb;
     }
 
-    /// <summary>
-    /// Convention: <c>{aggregate}.{event}.v1</c> derived from the event class name, lowercased,
-    /// with "Event" / "DomainEvent" suffix stripped. <c>TaskRunRecorded</c> → <c>task.run.recorded.v1</c>.
-    /// Future enhancement: read a <c>[EventVersion(N)]</c> attribute to bump the .vN suffix.
-    /// </summary>
+    // TaskRunRecorded -> "task.run.recorded.v1". Strips Event/DomainEvent suffix.
     private static string BuildRoutingKey(IDomainEvent evt)
     {
         var typeName = evt.GetType().Name;
-        var stripped = typeName.EndsWith("DomainEvent", StringComparison.Ordinal)
-            ? typeName[..^"DomainEvent".Length]
-            : typeName.EndsWith("Event", StringComparison.Ordinal)
-                ? typeName[..^"Event".Length]
-                : typeName;
+        var stripped = typeName.EndsWith("DomainEvent", StringComparison.Ordinal) ? typeName[..^"DomainEvent".Length]
+                     : typeName.EndsWith("Event", StringComparison.Ordinal) ? typeName[..^"Event".Length]
+                     : typeName;
 
         var sb = new StringBuilder(stripped.Length + 5);
         for (var i = 0; i < stripped.Length; i++)
         {
-            if (i > 0 && char.IsUpper(stripped[i]))
-            {
-                sb.Append('.');
-            }
-
+            if (i > 0 && char.IsUpper(stripped[i])) sb.Append('.');
             sb.Append(char.ToLowerInvariant(stripped[i]));
         }
-
         sb.Append(".v1");
         return sb.ToString();
     }

@@ -4,12 +4,7 @@ using Serilog.Events;
 
 namespace Testers.Api.Observability;
 
-/// <summary>
-/// Configures Serilog as the host logger. Reads any extra config from <c>appsettings.json</c>'s
-/// <c>Serilog</c> section (sinks, overrides) — letting ops tune log levels per environment
-/// without code changes — then layers in our standard enrichers and a console + rolling-file
-/// sink as defaults.
-/// </summary>
+// Reads any Serilog section from appsettings, then layers our defaults on top.
 public static class SerilogConfiguration
 {
     public static void Configure(LoggerConfiguration cfg, HostBuilderContext ctx)

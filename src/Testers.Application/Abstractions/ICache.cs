@@ -1,23 +1,12 @@
 namespace Testers.Application.Abstractions;
 
-/// <summary>
-/// Read-through cache abstraction. Backed by Redis in production (via the user's CacheRepository
-/// library); a fake in-memory implementation in tests. Keys are strings; values are serialised
-/// JSON. TTL is required on writes so stale data eventually expires even without explicit
-/// invalidation.
-/// </summary>
+// Redis-backed in prod; values serialised as JSON. TTL required so things eventually expire.
+// Note: GetOrAddAsync doesn't coalesce concurrent misses - use the DataCache<,> library
+// (Infrastructure/Cache/Library) for hot read paths that need single-flight fetches.
 public interface ICache
 {
     Task<T?> GetAsync<T>(string key, CancellationToken ct = default);
-
     Task SetAsync<T>(string key, T value, TimeSpan ttl, CancellationToken ct = default);
-
     Task RemoveAsync(string key, CancellationToken ct = default);
-
-    /// <summary>Get the value for <paramref name="key"/>, or compute and cache via <paramref name="factory"/> if missing.</summary>
-    Task<T> GetOrAddAsync<T>(
-        string key,
-        Func<CancellationToken, Task<T>> factory,
-        TimeSpan ttl,
-        CancellationToken ct = default);
+    Task<T> GetOrAddAsync<T>(string key, Func<CancellationToken, Task<T>> factory, TimeSpan ttl, CancellationToken ct = default);
 }

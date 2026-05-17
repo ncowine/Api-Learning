@@ -4,11 +4,8 @@ using Testers.Application.Abstractions;
 
 namespace Testers.Application.Behaviors;
 
-/// <summary>
-/// Outermost behavior. Emits one structured log per request with timing, the request type, and the
-/// current user — success or failure. Correlation IDs come from Serilog enrichers (HTTP middleware
-/// in the Api project) and are attached automatically to every log line in the request scope.
-/// </summary>
+// Outermost. One structured log per request. Correlation id comes from Serilog enrichers
+// pushed by the Api project's middleware - we don't need to touch it here.
 public sealed class LoggingBehavior<TRequest, TResponse>(
     ILogger<LoggingBehavior<TRequest, TResponse>> logger,
     ICurrentUser currentUser)
@@ -17,26 +14,22 @@ public sealed class LoggingBehavior<TRequest, TResponse>(
 {
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
     {
-        var requestName = typeof(TRequest).Name;
+        var name = typeof(TRequest).Name;
         var sw = Stopwatch.StartNew();
 
-        logger.LogInformation(
-            "Dispatching {RequestName} for {UserId} ({UserKind})",
-            requestName, currentUser.Id, currentUser.Kind);
+        logger.LogInformation("Dispatching {RequestName} for {UserId} ({UserKind})",
+            name, currentUser.Id, currentUser.Kind);
 
         try
         {
             var response = await next();
-            logger.LogInformation(
-                "{RequestName} completed in {ElapsedMs}ms",
-                requestName, sw.ElapsedMilliseconds);
+            logger.LogInformation("{RequestName} completed in {ElapsedMs}ms", name, sw.ElapsedMilliseconds);
             return response;
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex,
-                "{RequestName} failed in {ElapsedMs}ms: {ExceptionType}",
-                requestName, sw.ElapsedMilliseconds, ex.GetType().Name);
+            logger.LogWarning(ex, "{RequestName} failed in {ElapsedMs}ms: {ExceptionType}",
+                name, sw.ElapsedMilliseconds, ex.GetType().Name);
             throw;
         }
     }

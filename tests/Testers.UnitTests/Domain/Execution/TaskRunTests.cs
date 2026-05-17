@@ -3,11 +3,6 @@ using Testers.Domain.Execution.Events;
 
 namespace Testers.UnitTests.Domain.Execution;
 
-/// <summary>
-/// Tests the TaskRun aggregate's invariants and domain-event raising. Pure unit tests —
-/// no DI, no DbContext, no fakes. The aggregate is the most important type in the domain;
-/// every rule it enforces should have a test pinning it down.
-/// </summary>
 public class TaskRunTests
 {
     private static readonly Guid SampleTaskDefId = Guid.Parse("11111111-1111-1111-1111-111111111111");
@@ -51,7 +46,6 @@ public class TaskRunTests
     public void Constructor_with_empty_TaskDefinitionId_throws()
     {
         var act = () => new TaskRun(Guid.Empty, SampleBuildId, SampleTesterId, TaskOutcome.Skip, null, SampleActionedAt);
-
         Should.Throw<ArgumentException>(act).ParamName.ShouldBe("taskDefinitionId");
     }
 
@@ -59,7 +53,6 @@ public class TaskRunTests
     public void Constructor_with_empty_BuildId_throws()
     {
         var act = () => new TaskRun(SampleTaskDefId, Guid.Empty, SampleTesterId, TaskOutcome.Skip, null, SampleActionedAt);
-
         Should.Throw<ArgumentException>(act).ParamName.ShouldBe("buildId");
     }
 
@@ -70,7 +63,6 @@ public class TaskRunTests
     public void Constructor_with_missing_TesterId_throws(string? testerId)
     {
         var act = () => new TaskRun(SampleTaskDefId, SampleBuildId, testerId!, TaskOutcome.Skip, null, SampleActionedAt);
-
         Should.Throw<ArgumentException>(act).ParamName.ShouldBe("testerId");
     }
 
@@ -78,7 +70,6 @@ public class TaskRunTests
     public void Constructor_with_null_Outcome_throws()
     {
         var act = () => new TaskRun(SampleTaskDefId, SampleBuildId, SampleTesterId, null!, null, SampleActionedAt);
-
         Should.Throw<ArgumentNullException>(act).ParamName.ShouldBe("outcome");
     }
 

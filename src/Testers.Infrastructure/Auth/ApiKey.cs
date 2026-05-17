@@ -1,46 +1,21 @@
 namespace Testers.Infrastructure.Auth;
 
-/// <summary>
-/// A service-account API key for non-human callers (CI pipelines, cron jobs, partner services).
-///
-/// Stored in the App DB. The raw key string is shown to the issuing admin exactly ONCE at
-/// generation; only the SHA-256 hash is persisted. Auth handler (Api project) hashes the
-/// incoming <c>X-Api-Key</c> header and looks up by <see cref="KeyHash"/>.
-///
-/// Lifecycle: created (active) → optionally expires (<see cref="ExpiresAt"/>) → or revoked
-/// (<see cref="RevokedAt"/>). <see cref="IsActive"/> encapsulates both checks.
-/// </summary>
+// Service-account key. Raw value shown to admin once at creation; only the SHA-256 hash is stored.
+// Auth handler hashes the X-Api-Key header and looks up KeyHash (unique index).
 public sealed class ApiKey
 {
     public Guid Id { get; private set; }
-
-    /// <summary>Human-readable label for the admin UI (e.g. "CI pipeline - main branch").</summary>
     public string Label { get; private set; } = string.Empty;
-
-    /// <summary>SHA-256 hex (uppercase). Unique index in the DB; primary lookup target.</summary>
-    public string KeyHash { get; private set; } = string.Empty;
-
-    /// <summary>First few chars of the raw key, for display in the admin UI without leaking the secret.</summary>
-    public string Prefix { get; private set; } = string.Empty;
-
-    /// <summary>Free-form owner identifier (Okta user id, team id, service name).</summary>
+    public string KeyHash { get; private set; } = string.Empty;   // SHA-256 hex, uppercase
+    public string Prefix { get; private set; } = string.Empty;    // first 8 chars of raw, for display
     public string OwnerId { get; private set; } = string.Empty;
-
-    /// <summary>Scopes (roles) granted by this key. Projected through ICurrentUser.Roles.</summary>
     public IReadOnlyList<string> Scopes { get; private set; } = Array.Empty<string>();
-
     public DateTime CreatedAt { get; private set; }
-
     public DateTime? ExpiresAt { get; private set; }
-
     public DateTime? RevokedAt { get; private set; }
-
     public DateTime? LastUsedAt { get; private set; }
 
-    private ApiKey()
-    {
-        // EF Core materialisation only.
-    }
+    private ApiKey() { }  // EF
 
     internal ApiKey(
         string label,
@@ -65,6 +40,5 @@ public sealed class ApiKey
         RevokedAt is null && (ExpiresAt is null || ExpiresAt > now);
 
     public void Revoke(DateTime now) => RevokedAt = now;
-
     public void MarkUsed(DateTime now) => LastUsedAt = now;
 }

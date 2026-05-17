@@ -5,14 +5,7 @@ using Testers.Domain.Execution;
 
 namespace Testers.Infrastructure.Persistence;
 
-/// <summary>
-/// The shared TestPlan DB owned by another team. This API has heavy read + write access
-/// (TaskRun submissions land here so all consuming apps see them).
-///
-/// No entities are mapped yet — those land in step #8 with TestPlan / Category / SubCategory /
-/// TaskDefinition (reads) and TaskRun / Comment / BugLink (writes). The context exists now so
-/// the shared-connection + cross-DB transaction plumbing has a second consumer to exercise.
-/// </summary>
+// Shared TestPlan DB (other team's). TaskRun submissions go here so all consuming apps see them.
 public sealed class TestPlanDbContext : DbContext, ITestPlanDbContext
 {
     private readonly DatabaseOptions _databaseOptions;
@@ -44,16 +37,15 @@ public sealed class TestPlanDbContext : DbContext, ITestPlanDbContext
             b.Property(r => r.Note).HasMaxLength(2000);
             b.Property(r => r.ActionedAt).IsRequired();
 
-            // IAuditable fields from AggregateRoot<TId>.
+            // IAuditable from AggregateRoot<TId>.
             b.Property(r => r.CreatedAt);
             b.Property(r => r.CreatedBy).HasMaxLength(200);
             b.Property(r => r.ModifiedAt);
             b.Property(r => r.ModifiedBy).HasMaxLength(200);
 
-            // Domain events are in-memory only; never persist.
+            // Events live in memory only.
             b.Ignore(r => r.DomainEvents);
 
-            // Hot-path query indexes from the perf discussion.
             b.HasIndex(r => new { r.BuildId, r.TaskDefinitionId });
             b.HasIndex(r => new { r.TesterId, r.ActionedAt });
 

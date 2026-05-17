@@ -4,14 +4,7 @@ using RabbitMQ.Client;
 
 namespace Testers.Infrastructure.Messaging;
 
-/// <summary>
-/// Owns the singleton <see cref="IConnection"/> to the broker. RabbitMQ best-practice is exactly
-/// one IConnection per process; channels (<see cref="IModel"/>) are cheap and per-operation.
-///
-/// Lazy-opens on first <see cref="GetOrOpen"/> call so the broker doesn't have to be reachable
-/// at app start (good for local dev / Testcontainers timing). On shutdown the IConnection is
-/// disposed by DI's singleton lifecycle.
-/// </summary>
+// One IConnection per process (RabbitMQ best practice). Lazy-opens; channels are per-operation.
 public sealed class RabbitConnectionFactory : IDisposable
 {
     private readonly RabbitOptions _options;
@@ -27,17 +20,11 @@ public sealed class RabbitConnectionFactory : IDisposable
 
     public IConnection GetOrOpen()
     {
-        if (_connection is { IsOpen: true })
-        {
-            return _connection;
-        }
+        if (_connection is { IsOpen: true }) return _connection;
 
         lock (_gate)
         {
-            if (_connection is { IsOpen: true })
-            {
-                return _connection;
-            }
+            if (_connection is { IsOpen: true }) return _connection;
 
             _connection?.Dispose();
 
@@ -59,19 +46,12 @@ public sealed class RabbitConnectionFactory : IDisposable
 
     public void Dispose()
     {
-        if (_connection is not null)
-        {
-            try
-            {
-                _connection.Close();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error closing RabbitMQ connection.");
-            }
+        if (_connection is null) return;
 
-            _connection.Dispose();
-            _connection = null;
-        }
+        try { _connection.Close(); }
+        catch (Exception ex) { _logger.LogWarning(ex, "Error closing RabbitMQ connection."); }
+
+        _connection.Dispose();
+        _connection = null;
     }
 }

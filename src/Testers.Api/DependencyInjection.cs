@@ -12,12 +12,6 @@ using Testers.Application.Abstractions;
 
 namespace Testers.Api;
 
-/// <summary>
-/// Wires the API/HTTP edge: auth schemes (Okta JWT + API key), authorization policies, the
-/// exception-to-ProblemDetails handler, Swagger with auth, the endpoint scanner, and the
-/// HTTP-aware <see cref="ICurrentUser"/> (which overrides the system fallback from Infrastructure).
-/// Composed into <c>Program.cs</c> as one call: <c>services.AddApiServices(builder.Configuration)</c>.
-/// </summary>
 public static class DependencyInjection
 {
     public static IServiceCollection AddApiServices(this IServiceCollection services, IConfiguration configuration)
@@ -25,32 +19,30 @@ public static class DependencyInjection
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        // ---- HTTP-aware ICurrentUser supersedes Infrastructure's SystemCurrentUser ----
+        // HTTP-aware ICurrentUser - supersedes SystemCurrentUser from Infrastructure.
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, HttpContextCurrentUser>();
 
-        // ---- Authentication: Okta JWT + ApiKey ----
+        // Auth: Okta JWT + ApiKey schemes.
         services.Configure<OktaJwtOptions>(configuration.GetSection(OktaJwtOptions.SectionName));
 
         services.AddAuthentication(AuthSchemes.OktaJwt)
             .AddJwtBearer(AuthSchemes.OktaJwt, opts =>
             {
-                var oktaSection = configuration.GetSection(OktaJwtOptions.SectionName);
-                opts.Authority = oktaSection["Authority"];
-                opts.Audience = oktaSection["Audience"];
-                opts.RequireHttpsMetadata = oktaSection.GetValue("RequireHttpsMetadata", true);
+                var okta = configuration.GetSection(OktaJwtOptions.SectionName);
+                opts.Authority = okta["Authority"];
+                opts.Audience = okta["Audience"];
+                opts.RequireHttpsMetadata = okta.GetValue("RequireHttpsMetadata", true);
             })
-            .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
-                AuthSchemes.ApiKey, _ => { });
+            .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(AuthSchemes.ApiKey, _ => { });
 
-        // ---- Authorization policies ----
         services.AddAuthorization(opts => opts.AddTestersPolicies());
 
-        // ---- Exception handler (RFC 7807 ProblemDetails) ----
+        // RFC 7807 ProblemDetails on exceptions.
         services.AddExceptionHandler<ApiExceptionHandler>();
         services.AddProblemDetails();
 
-        // ---- Swagger / OpenAPI with auth schemes ----
+        // Swagger with both auth schemes.
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
         {
@@ -63,7 +55,7 @@ public static class DependencyInjection
                 Scheme = "bearer",
                 BearerFormat = "JWT",
                 In = ParameterLocation.Header,
-                Description = "Okta-issued JWT. Paste the token (no 'Bearer ' prefix).",
+                Description = "Okta JWT (no 'Bearer ' prefix).",
             });
 
             c.AddSecurityDefinition(AuthSchemes.ApiKey, new OpenApiSecurityScheme
@@ -81,10 +73,7 @@ public static class DependencyInjection
             });
         });
 
-        // ---- Health checks ----
         services.AddHealthChecks();
-
-        // ---- Endpoint discovery (scans Application assembly for IEndpoint impls) ----
         services.AddEndpointScanning();
 
         return services;

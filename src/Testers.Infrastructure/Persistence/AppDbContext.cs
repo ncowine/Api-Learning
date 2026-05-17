@@ -8,16 +8,8 @@ using Testers.Infrastructure.Outbox;
 
 namespace Testers.Infrastructure.Persistence;
 
-/// <summary>
-/// The user-owned DB. Holds the outbox, inbox, audit log, and any app-specific entities
-/// (read-model projections, API keys, etc.). Shares its underlying MySqlConnection with
-/// <see cref="TestPlanDbContext"/> via <see cref="SharedConnection"/> so cross-DB writes
-/// commit atomically within one transaction on the same MySQL server.
-///
-/// Schema (database name in MySQL terms) is configurable via <see cref="DatabaseOptions.AppSchema"/>;
-/// entities are mapped with explicit <c>ToTable(name, schema)</c> so cross-DB queries can use
-/// fully-qualified names without changing the connection's current database.
-/// </summary>
+// Our DB. Outbox, inbox, audit log, ApiKey, app-specific entities. Shares MySqlConnection
+// with TestPlanDbContext via SharedConnection for atomic cross-DB writes.
 public sealed class AppDbContext : DbContext, IAppDbContext
 {
     private readonly DatabaseOptions _databaseOptions;
@@ -29,11 +21,8 @@ public sealed class AppDbContext : DbContext, IAppDbContext
     }
 
     public DbSet<OutboxMessage> Outbox => Set<OutboxMessage>();
-
     public DbSet<InboxMessage> Inbox => Set<InboxMessage>();
-
     public DbSet<AuditLog> AuditLog => Set<AuditLog>();
-
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -50,7 +39,7 @@ public sealed class AppDbContext : DbContext, IAppDbContext
             b.Property(o => o.Payload).HasColumnType("json").IsRequired();
             b.Property(o => o.CorrelationId).HasMaxLength(100);
             b.Property(o => o.LastError).HasMaxLength(2000);
-            // The OutboxPublisher polls "unprocessed, oldest-first" — this index covers it.
+            // Index covers the publisher's poll query: WHERE processed_at IS NULL ORDER BY occurred_at.
             b.HasIndex(o => new { o.ProcessedAt, o.OccurredAt });
         });
 
@@ -99,7 +88,6 @@ public sealed class AppDbContext : DbContext, IAppDbContext
         });
 
         modelBuilder.ApplySnakeCaseNames();
-
         base.OnModelCreating(modelBuilder);
     }
 }

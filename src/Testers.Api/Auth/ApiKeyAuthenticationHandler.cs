@@ -10,21 +10,9 @@ using Testers.Infrastructure.Persistence;
 
 namespace Testers.Api.Auth;
 
-/// <summary>
-/// Custom <see cref="AuthenticationHandler{TOptions}"/> for service-account auth via API key.
-///
-/// Flow:
-/// <list type="number">
-///   <item>Read <c>X-Api-Key</c> header. If absent, return <see cref="AuthenticateResult.NoResult"/>
-///         (lets the next scheme try; doesn't short-circuit).</item>
-///   <item>Hash the raw key with SHA-256 (matching what <see cref="ApiKeyHasher"/> stores).</item>
-///   <item>Look up by hash in <c>AppDb.ApiKeys</c>. Unique index makes this a sub-ms PK lookup.</item>
-///   <item>Reject if revoked or expired. Otherwise emit a <see cref="ClaimsPrincipal"/> with
-///         the API key's owner, scopes, and a Kind=Service claim that <c>HttpContextCurrentUser</c>
-///         reads.</item>
-///   <item>Stamp <c>LastUsedAt</c> as a fire-and-forget side effect (don't block auth on its commit).</item>
-/// </list>
-/// </summary>
+// Read header, SHA-256 hash, look up in api_key table (unique index = sub-ms PK lookup).
+// Reject if revoked/expired. Emit ClaimsPrincipal with kind=Service so HttpContextCurrentUser
+// can branch. LastUsedAt stamped fire-and-forget so auth latency isn't bottlenecked on a DB write.
 public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
 {
     public const string ClaimTypeOwnerId = "apikey:owner";
@@ -50,30 +38,16 @@ public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAu
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         if (!Request.Headers.TryGetValue(Options.HeaderName, out var headerValues))
-        {
-            return AuthenticateResult.NoResult();
-        }
+            return AuthenticateResult.NoResult();   // let next scheme try
 
         var raw = headerValues.ToString();
-        if (string.IsNullOrWhiteSpace(raw))
-        {
-            return AuthenticateResult.NoResult();
-        }
+        if (string.IsNullOrWhiteSpace(raw)) return AuthenticateResult.NoResult();
 
         var hash = ApiKeyHasher.Hash(raw);
-        var key = await _db.ApiKeys.AsNoTracking()
-            .FirstOrDefaultAsync(k => k.KeyHash == hash)
-            .ConfigureAwait(false);
+        var key = await _db.ApiKeys.AsNoTracking().FirstOrDefaultAsync(k => k.KeyHash == hash);
 
-        if (key is null)
-        {
-            return AuthenticateResult.Fail("Unknown API key.");
-        }
-
-        if (!key.IsActive(_clock.UtcNow))
-        {
-            return AuthenticateResult.Fail("API key is revoked or expired.");
-        }
+        if (key is null) return AuthenticateResult.Fail("Unknown API key.");
+        if (!key.IsActive(_clock.UtcNow)) return AuthenticateResult.Fail("API key is revoked or expired.");
 
         var claims = new List<Claim>
         {
@@ -85,16 +59,11 @@ public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAu
             new(ClaimTypeKind, UserKind.Service.ToString()),
         };
         foreach (var scope in key.Scopes)
-        {
             claims.Add(new Claim(ClaimTypes.Role, scope));
-        }
 
-        var identity = new ClaimsIdentity(claims, Scheme.Name);
-        var principal = new ClaimsPrincipal(identity);
-        var ticket = new AuthenticationTicket(principal, Scheme.Name);
+        var ticket = new AuthenticationTicket(new ClaimsPrincipal(new ClaimsIdentity(claims, Scheme.Name)), Scheme.Name);
 
-        // Fire-and-forget LastUsedAt update so auth latency isn't bottlenecked on a DB write.
-        // Errors are logged but don't fail the request.
+        // Fire-and-forget; failures logged, never block auth.
         _ = UpdateLastUsedAsync(key.Id);
 
         return AuthenticateResult.Success(ticket);
@@ -104,20 +73,13 @@ public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAu
     {
         try
         {
-            var tracked = await _db.ApiKeys.FindAsync(keyId).ConfigureAwait(false);
-            if (tracked is null)
-            {
-                return;
-            }
-
+            var tracked = await _db.ApiKeys.FindAsync(keyId);
+            if (tracked is null) return;
             tracked.MarkUsed(_clock.UtcNow);
-            await _db.SaveChangesAsync().ConfigureAwait(false);
+            await _db.SaveChangesAsync();
         }
 #pragma warning disable CA1031
-        catch (Exception ex)
-        {
-            Logger.LogWarning(ex, "Failed to stamp LastUsedAt on ApiKey {KeyId}", keyId);
-        }
+        catch (Exception ex) { Logger.LogWarning(ex, "Failed to stamp LastUsedAt on ApiKey {KeyId}", keyId); }
 #pragma warning restore CA1031
     }
 }
