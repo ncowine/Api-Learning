@@ -1,0 +1,29 @@
+<Project>
+
+  <!--
+    Central Package Management (CPM): all NuGet versions declared once here.
+    Individual csproj files use <PackageReference Include="Foo" /> with no Version.
+    Add a new dependency by adding one <PackageVersion .../> line below.
+    Bump a version by editing it once here; every consumer updates together.
+  -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ASP.NET Core / API host -->
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="8.0.27" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+
+    <!-- Test stack (referenced via tests/Directory.Build.props) -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageVersion Include="xunit" Version="2.5.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.3" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.0" />
+
+    <!-- Analyzers (referenced via Directory.Build.props) -->
+    <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="9.0.0" />
+  </ItemGroup>
+
+</Project>

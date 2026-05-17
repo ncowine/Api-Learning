@@ -1,0 +1,27 @@
+<Project>
+
+  <!--
+    Test-project properties + shared test packages. Imports the root Directory.Build.props
+    so test projects still pick up nullable / implicit usings / warnings-as-errors / etc.
+    (MSBuild only auto-imports the *nearest* Directory.Build.props upward; if you create
+    one here, you must explicitly re-import the parent.)
+  -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="coverlet.collector" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

@@ -21,9 +21,9 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
-  <!-- Common analyzers everywhere. Roslynator is MIT, free. -->
+  <!-- Common analyzers everywhere. Version pinned centrally in Directory.Packages.props. -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="9.0.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" PrivateAssets="all" />
   </ItemGroup>
 
   <!-- Default namespace and assembly name = folder name (override per project if needed). -->
