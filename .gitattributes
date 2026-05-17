@@ -1,0 +1,41 @@
+# Git attributes for the Testers API repo.
+# Locks line endings to CRLF since this is a Windows-only codebase
+# (.NET 8 on Windows, VS / Rider / VS Code with the C# extension).
+# Silences the "LF will be replaced by CRLF" warnings and prevents
+# whitespace-only diffs between editors with different defaults.
+
+# Auto-detect text files; normalise to LF in the repo, CRLF on checkout.
+* text=auto eol=crlf
+
+# Code & config files: explicit CRLF, with XML-aware diff where useful.
+*.cs            text eol=crlf
+*.csproj        text eol=crlf diff=xml
+*.sln           text eol=crlf
+*.props         text eol=crlf diff=xml
+*.targets       text eol=crlf diff=xml
+*.config        text eol=crlf diff=xml
+*.json          text eol=crlf
+*.yml           text eol=crlf
+*.yaml          text eol=crlf
+*.md            text eol=crlf
+*.editorconfig  text eol=crlf
+*.gitignore     text eol=crlf
+*.gitattributes text eol=crlf
+*.ps1           text eol=crlf
+
+# Bash / cross-platform tools that expect LF (keep LF if any ever land).
+*.sh            text eol=lf
+
+# Binary files: no line-ending or diff handling.
+*.dll           binary
+*.exe           binary
+*.pdb           binary
+*.png           binary
+*.jpg           binary
+*.jpeg          binary
+*.gif           binary
+*.ico           binary
+*.pdf           binary
+*.zip           binary
+*.7z            binary
+*.snk           binary
