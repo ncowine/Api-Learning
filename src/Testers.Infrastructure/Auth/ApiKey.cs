@@ -64,7 +64,7 @@ public sealed class ApiKey
     public bool IsActive(DateTime now) =>
         RevokedAt is null && (ExpiresAt is null || ExpiresAt > now);
 
-    internal void Revoke(DateTime now) => RevokedAt = now;
+    public void Revoke(DateTime now) => RevokedAt = now;
 
-    internal void MarkUsed(DateTime now) => LastUsedAt = now;
+    public void MarkUsed(DateTime now) => LastUsedAt = now;
 }

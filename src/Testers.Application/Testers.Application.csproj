@@ -1,5 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!--
+    Application references the ASP.NET Core shared framework so feature-slice
+    endpoint classes can declare an IEndpoint that maps routes via
+    IEndpointRouteBuilder. Standard pattern in modern .NET 8 codebases doing
+    vertical slice + minimal APIs.
+  -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
