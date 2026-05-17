@@ -28,8 +28,10 @@
                  revisit only if profiling shows logging is on a hot path.
         CA1805 - explicit `= default` initialisation; sometimes intentional for clarity (e.g. Unit.Value).
         CA1305 - culture-sensitive formatting: too noisy on string interp; we accept Invariant-by-default risk.
+        CA1861 - "prefer static readonly fields over constant array arguments": overly aggressive,
+                 fires on routine test assertions and short literal collections.
     -->
-    <NoWarn>$(NoWarn);CS1591;CA1062;CA1812;CA1711;CA1716;CA1848;CA1805;CA1305</NoWarn>
+    <NoWarn>$(NoWarn);CS1591;CA1062;CA1812;CA1711;CA1716;CA1848;CA1805;CA1305;CA1861</NoWarn>
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
