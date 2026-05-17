@@ -19,7 +19,7 @@ public sealed class ActionTaskRunEndpoint : IEndpoint
                     var cmd = new ActionTaskRunCommand(
                         taskDefinitionId, body.BuildId, body.Outcome, body.Note);
                     var result = await dispatcher.Send(cmd, ct);
-                    return Results.Created(Routes.Tasks.RunDetail(taskDefinitionId, result.TaskRunId), result);
+                    return Results.Created(Routes.Runs.Detail(result.TaskRunId), result);
                 })
             .RequireAuthorization()
             .WithName("ActionTaskRun")

@@ -53,6 +53,7 @@ public sealed class TaskRun : AggregateRoot<Guid>
         ArgumentException.ThrowIfNullOrWhiteSpace(authorId);
         var c = new Comment(body, authorId, addedAt);
         _comments.Add(c);
+        Raise(new CommentAddedToRun(Guid.NewGuid(), addedAt, Id, c.Id, authorId, body));
         return c;
     }
 
@@ -61,6 +62,7 @@ public sealed class TaskRun : AggregateRoot<Guid>
         ArgumentException.ThrowIfNullOrWhiteSpace(externalBugId);
         var link = new BugLink(externalBugId, bugTrackerUrl, linkedAt);
         _bugLinks.Add(link);
+        Raise(new BugLinkedToRun(Guid.NewGuid(), linkedAt, Id, link.Id, externalBugId, bugTrackerUrl));
         return link;
     }
 }
