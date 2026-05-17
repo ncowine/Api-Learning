@@ -5,6 +5,7 @@ using MySqlConnector;
 using Testers.Application.Abstractions;
 using Testers.Infrastructure.Audit;
 using Testers.Infrastructure.Dispatching;
+using Testers.Infrastructure.Messaging;
 using Testers.Infrastructure.Outbox;
 using Testers.Infrastructure.Persistence;
 
@@ -48,6 +49,11 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddSingleton<IClock, SystemClock>();
         services.AddScoped<ICurrentUser, SystemCurrentUser>();
+
+        // ---- Messaging (sub-step b): RabbitMQ outbox publisher ----
+        services.Configure<RabbitOptions>(configuration.GetSection(RabbitOptions.SectionName));
+        services.AddSingleton<RabbitConnectionFactory>();
+        services.AddHostedService<OutboxPublisher>();
 
         return services;
     }
