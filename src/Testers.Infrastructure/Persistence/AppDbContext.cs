@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Testers.Application.Abstractions;
 using Testers.Infrastructure.Audit;
 using Testers.Infrastructure.Auth;
 using Testers.Infrastructure.Outbox;
@@ -17,7 +18,7 @@ namespace Testers.Infrastructure.Persistence;
 /// entities are mapped with explicit <c>ToTable(name, schema)</c> so cross-DB queries can use
 /// fully-qualified names without changing the connection's current database.
 /// </summary>
-public sealed class AppDbContext : DbContext
+public sealed class AppDbContext : DbContext, IAppDbContext
 {
     private readonly DatabaseOptions _databaseOptions;
 

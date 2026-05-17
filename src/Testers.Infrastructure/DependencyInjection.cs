@@ -46,6 +46,11 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>((sp, options) => ConfigureMySql(sp, options, serverVersion));
         services.AddDbContext<TestPlanDbContext>((sp, options) => ConfigureMySql(sp, options, serverVersion));
 
+        // Expose the DbContexts via the IAppDbContext / ITestPlanDbContext interfaces so
+        // Application handlers can inject them without referencing concrete Infrastructure types.
+        services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
+        services.AddScoped<ITestPlanDbContext>(sp => sp.GetRequiredService<TestPlanDbContext>());
+
         // ---- Dispatcher + UoW + clock + fallback current user ----
         services.AddScoped<IDispatcher, Dispatcher>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
