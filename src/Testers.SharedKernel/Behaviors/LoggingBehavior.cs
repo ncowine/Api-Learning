@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
-using Testers.Application.Abstractions;
+using Testers.SharedKernel.Abstractions;
 
-namespace Testers.Application.Behaviors;
+namespace Testers.SharedKernel.Behaviors;
 
-// Outermost. One structured log per request. Correlation id comes from Serilog enrichers
+// Outermost. One structured log per request. Correlation id comes from log enrichers
 // pushed by the Api project's middleware - we don't need to touch it here.
 public sealed class LoggingBehavior<TRequest, TResponse>(
     ILogger<LoggingBehavior<TRequest, TResponse>> logger,

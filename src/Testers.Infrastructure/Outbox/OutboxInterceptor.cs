@@ -1,9 +1,9 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
-using Testers.Application.Abstractions;
+using Testers.SharedKernel.Abstractions;
 using Testers.Domain.Abstractions;
 using Testers.Infrastructure.Persistence;
 

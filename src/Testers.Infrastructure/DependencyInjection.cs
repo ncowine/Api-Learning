@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MySqlConnector;
 using StackExchange.Redis;
-using Testers.Application.Abstractions;
+using Testers.SharedKernel.Abstractions;
 using Testers.Infrastructure.Audit;
 using Testers.Infrastructure.Cache;
 using Testers.Infrastructure.Dispatching;

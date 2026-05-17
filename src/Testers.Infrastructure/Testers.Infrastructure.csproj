@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Testers.Application\Testers.Application.csproj" />
+    <ProjectReference Include="..\Testers.SharedKernel\Testers.SharedKernel.csproj" />
   </ItemGroup>
 
 </Project>

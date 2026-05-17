@@ -1,4 +1,4 @@
-using Testers.Application.Abstractions;
+﻿using Testers.SharedKernel.Abstractions;
 
 namespace Testers.Infrastructure;
 

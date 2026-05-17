@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Diagnostics;
+﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Testers.Application.Exceptions;
-using ValidationException = Testers.Application.Exceptions.ValidationException;
+using Testers.SharedKernel.Exceptions;
+using ValidationException = Testers.SharedKernel.Exceptions.ValidationException;
 
 namespace Testers.Api.Errors;
 

@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace Testers.Application.Abstractions;
+namespace Testers.SharedKernel.Abstractions;
 
-// Handlers depend on this, not the concrete TestPlanDbContext in Infrastructure.
+// Marker interface for the shared TestPlan DbContext. Handlers depend on this, not the
+// concrete TestPlanDbContext in Infrastructure.
 public interface ITestPlanDbContext
 {
     DbSet<TEntity> Set<TEntity>() where TEntity : class;

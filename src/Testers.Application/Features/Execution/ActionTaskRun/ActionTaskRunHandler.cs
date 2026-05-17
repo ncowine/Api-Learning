@@ -1,4 +1,4 @@
-using Testers.Application.Abstractions;
+﻿using Testers.SharedKernel.Abstractions;
 using Testers.Contracts.Execution;
 using Testers.Domain.Execution;
 

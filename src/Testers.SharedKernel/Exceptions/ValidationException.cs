@@ -1,6 +1,6 @@
 using FluentValidation.Results;
 
-namespace Testers.Application.Exceptions;
+namespace Testers.SharedKernel.Exceptions;
 
 // Api maps to 400 ProblemDetails with the Errors dict.
 public sealed class ValidationException : Exception

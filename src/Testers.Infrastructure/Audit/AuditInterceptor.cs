@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Testers.Application.Abstractions;
+using Testers.SharedKernel.Abstractions;
 using Testers.Domain.Abstractions;
 
 namespace Testers.Infrastructure.Audit;

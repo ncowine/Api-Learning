@@ -1,5 +1,5 @@
-using Microsoft.EntityFrameworkCore;
-using Testers.Application.Abstractions;
+﻿using Microsoft.EntityFrameworkCore;
+using Testers.SharedKernel.Abstractions;
 using Testers.Infrastructure.Persistence;
 
 namespace Testers.Infrastructure.Dispatching;

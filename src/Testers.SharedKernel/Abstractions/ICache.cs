@@ -1,8 +1,8 @@
-namespace Testers.Application.Abstractions;
+namespace Testers.SharedKernel.Abstractions;
 
 // Redis-backed in prod; values serialised as JSON. TTL required so things eventually expire.
-// Note: GetOrAddAsync doesn't coalesce concurrent misses - use the DataCache<,> library
-// (Infrastructure/Cache/Library) for hot read paths that need single-flight fetches.
+// Note: GetOrAddAsync doesn't coalesce concurrent misses - use a typed in-memory cache
+// (e.g. DataCache<,> from the vendored CacheRepository) when single-flight matters.
 public interface ICache
 {
     Task<T?> GetAsync<T>(string key, CancellationToken ct = default);

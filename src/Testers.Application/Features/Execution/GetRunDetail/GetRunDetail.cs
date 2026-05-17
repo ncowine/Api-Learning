@@ -1,5 +1,5 @@
-using FluentValidation;
-using Testers.Application.Abstractions;
+﻿using FluentValidation;
+using Testers.SharedKernel.Abstractions;
 using Testers.Contracts.Execution;
 
 namespace Testers.Application.Features.Execution.GetRunDetail;

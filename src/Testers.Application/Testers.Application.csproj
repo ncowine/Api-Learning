@@ -1,11 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!--
-    Application references the ASP.NET Core shared framework so feature-slice
-    endpoint classes can declare an IEndpoint that maps routes via
-    IEndpointRouteBuilder. Standard pattern in modern .NET 8 codebases doing
-    vertical slice + minimal APIs.
-  -->
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
@@ -14,7 +8,6 @@
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Scrutor" />
   </ItemGroup>
@@ -22,9 +15,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Testers.Domain\Testers.Domain.csproj" />
     <ProjectReference Include="..\Testers.Contracts\Testers.Contracts.csproj" />
+    <ProjectReference Include="..\Testers.SharedKernel\Testers.SharedKernel.csproj" />
   </ItemGroup>
 
-  <!-- Let test projects reach internal handler classes (e.g. ActionTaskRunHandler) -->
   <ItemGroup>
     <InternalsVisibleTo Include="Testers.UnitTests" />
     <InternalsVisibleTo Include="Testers.IntegrationTests" />

@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -8,7 +8,7 @@ using Microsoft.OpenApi.Models;
 using Testers.Api.Auth;
 using Testers.Api.Endpoints;
 using Testers.Api.Errors;
-using Testers.Application.Abstractions;
+using Testers.SharedKernel.Abstractions;
 
 namespace Testers.Api;
 

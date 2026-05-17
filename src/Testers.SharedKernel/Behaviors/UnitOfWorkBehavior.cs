@@ -1,6 +1,6 @@
-using Testers.Application.Abstractions;
+using Testers.SharedKernel.Abstractions;
 
-namespace Testers.Application.Behaviors;
+namespace Testers.SharedKernel.Behaviors;
 
 // Commands only - queries pass through. Begins shared-connection tx, commits on success.
 public sealed class UnitOfWorkBehavior<TRequest, TResponse>(IUnitOfWork uow)

@@ -1,7 +1,8 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Testers.Application.Abstractions;
+using Testers.Application;
+using Testers.SharedKernel.Abstractions;
 
 namespace Testers.Api.Endpoints;
 
@@ -12,7 +13,7 @@ public static class EndpointScanner
     public static IServiceCollection AddEndpointScanning(this IServiceCollection services)
     {
         services.Scan(scan => scan
-            .FromAssemblyOf<IDispatcher>()
+            .FromAssemblyOf<ApplicationAssemblyMarker>()
             .AddClasses(c => c.AssignableTo<IEndpoint>())
             .As<IEndpoint>()
             .WithSingletonLifetime());

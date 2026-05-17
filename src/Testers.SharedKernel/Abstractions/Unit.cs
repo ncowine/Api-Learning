@@ -1,4 +1,4 @@
-namespace Testers.Application.Abstractions;
+namespace Testers.SharedKernel.Abstractions;
 
 // void-equivalent for IRequest<Unit> so generic handlers stay uniform.
 public readonly record struct Unit

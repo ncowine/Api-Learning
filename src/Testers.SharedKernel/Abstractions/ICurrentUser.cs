@@ -1,4 +1,4 @@
-namespace Testers.Application.Abstractions;
+namespace Testers.SharedKernel.Abstractions;
 
 public enum UserKind { Human, Service }
 

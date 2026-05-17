@@ -1,8 +1,8 @@
 using FluentValidation;
-using Testers.Application.Abstractions;
-using ValidationException = Testers.Application.Exceptions.ValidationException;
+using Testers.SharedKernel.Abstractions;
+using ValidationException = Testers.SharedKernel.Exceptions.ValidationException;
 
-namespace Testers.Application.Behaviors;
+namespace Testers.SharedKernel.Behaviors;
 
 // Runs validators in parallel. Throws our ValidationException (mapped to 400 by Api).
 public sealed class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators)

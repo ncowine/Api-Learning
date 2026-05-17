@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Testers.Infrastructure\Testers.Infrastructure.csproj" />
     <ProjectReference Include="..\Testers.Contracts\Testers.Contracts.csproj" />
+    <ProjectReference Include="..\Testers.SharedKernel\Testers.SharedKernel.csproj" />
   </ItemGroup>
 
 </Project>

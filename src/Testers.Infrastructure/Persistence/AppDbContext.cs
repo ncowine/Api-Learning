@@ -1,7 +1,7 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Testers.Application.Abstractions;
+using Testers.SharedKernel.Abstractions;
 using Testers.Infrastructure.Audit;
 using Testers.Infrastructure.Auth;
 using Testers.Infrastructure.Outbox;

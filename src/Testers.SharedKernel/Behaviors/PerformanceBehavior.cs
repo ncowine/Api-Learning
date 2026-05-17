@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
-using Testers.Application.Abstractions;
+using Testers.SharedKernel.Abstractions;
 
-namespace Testers.Application.Behaviors;
+namespace Testers.SharedKernel.Behaviors;
 
 // Innermost - times only handler work, not validation / tx setup. Warns if slow.
 public sealed class PerformanceBehavior<TRequest, TResponse>(

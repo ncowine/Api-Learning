@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Testers.Application.Abstractions;
+using Testers.SharedKernel.Abstractions;
 using Testers.Domain.Execution;
 
 namespace Testers.Infrastructure.Persistence;

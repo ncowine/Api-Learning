@@ -1,5 +1,5 @@
-using Microsoft.Extensions.DependencyInjection;
-using Testers.Application.Abstractions;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Testers.SharedKernel.Abstractions;
 
 namespace Testers.Infrastructure.Dispatching;
 

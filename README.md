@@ -43,17 +43,27 @@ dotnet test tests/Testers.IntegrationTests    # Testcontainers MySQL; Docker req
 ```
 src/
   Testers.Domain/         entities, value objects, domain events, smart enums
-  Testers.Application/    feature slices + dispatcher + pipeline behaviors + exceptions
+  Testers.SharedKernel/   generic CQS framework: abstractions + pipeline behaviors + exceptions
+  Testers.Application/    feature slices + DI composition (uses SharedKernel)
   Testers.Infrastructure/ EF Core, RabbitMQ, Redis, auth helpers, dispatcher impl
-  Testers.Contracts/      published integration events (leaf project, no refs)
+  Testers.Contracts/      published wire DTOs + route constants (leaf project, for clients)
   Testers.Api/            Program.cs, auth schemes, swagger, exception handler
 tests/
   Testers.UnitTests/        handler + domain tests (NSubstitute + Shouldly)
   Testers.IntegrationTests/ WebApplicationFactory + Testcontainers MySQL
 ```
 
-Project refs (compiler-enforced): `Domain <- Application <- Infrastructure <- Api`.
-Application also references `Contracts` for the wire DTOs + route constants.
+Project refs (compiler-enforced):
+- Domain, SharedKernel, Contracts are leaves
+- Application -> Domain + Contracts + SharedKernel
+- Infrastructure -> Application + SharedKernel
+- Api -> Infrastructure + Contracts + SharedKernel
+
+`Testers.SharedKernel` holds the generic plumbing - `IDispatcher`, `IRequest/ICommand/IQuery`,
+`IPipelineBehavior`, the four behaviors (Logging/Validation/UoW/Performance), the four
+exception types, `IClock`/`ICurrentUser`/`ICache`/`IUnitOfWork`/`IEndpoint`/`Unit`, plus the
+`IAppDbContext`/`ITestPlanDbContext` marker interfaces. Nothing app-specific - reusable for
+any .NET API with the same dispatcher pattern.
 
 ## Adding a feature slice
 

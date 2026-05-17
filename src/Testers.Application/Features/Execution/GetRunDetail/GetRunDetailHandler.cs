@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
-using Testers.Application.Abstractions;
-using Testers.Application.Exceptions;
+﻿using Microsoft.EntityFrameworkCore;
+using Testers.SharedKernel.Abstractions;
+using Testers.SharedKernel.Exceptions;
 using Testers.Contracts.Execution;
 using Testers.Domain.Execution;
 

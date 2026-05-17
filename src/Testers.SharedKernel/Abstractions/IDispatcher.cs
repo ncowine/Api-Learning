@@ -1,4 +1,4 @@
-namespace Testers.Application.Abstractions;
+namespace Testers.SharedKernel.Abstractions;
 
 // Endpoints inject this and call Send. Impl in Infrastructure (needs IServiceProvider).
 public interface IDispatcher

@@ -1,7 +1,7 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
-using Testers.Application.Abstractions;
+using Testers.SharedKernel.Abstractions;
 
 namespace Testers.Infrastructure.Cache;
 

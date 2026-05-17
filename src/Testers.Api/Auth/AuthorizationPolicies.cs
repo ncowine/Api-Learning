@@ -1,6 +1,6 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Testers.Application.Abstractions;
+using Testers.SharedKernel.Abstractions;
 
 namespace Testers.Api.Auth;
 

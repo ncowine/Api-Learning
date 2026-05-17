@@ -1,4 +1,4 @@
-namespace Testers.Application.Exceptions;
+namespace Testers.SharedKernel.Exceptions;
 
 // Api maps to 404.
 public sealed class NotFoundException(string entity, object key)
