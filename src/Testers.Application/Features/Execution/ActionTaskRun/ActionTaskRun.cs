@@ -1,21 +1,17 @@
 using FluentValidation;
 using Testers.Application.Abstractions;
+using Testers.Contracts.Execution;
 using Testers.Domain.Execution;
 
 namespace Testers.Application.Features.Execution.ActionTaskRun;
 
-// The shape of the slice: command, response, validator. Handler lives next door.
-
+// Server-internal Command (carries ICommand<>). The wire shape (Request body, Result response)
+// lives in Testers.Contracts so clients can reference one tiny project.
 public sealed record ActionTaskRunCommand(
     Guid TaskDefinitionId,
     Guid BuildId,
     string Outcome,
     string? Note) : ICommand<ActionTaskRunResult>;
-
-public sealed record ActionTaskRunResult(
-    Guid TaskRunId,
-    string Outcome,
-    DateTime ActionedAt);
 
 public sealed class ActionTaskRunValidator : AbstractValidator<ActionTaskRunCommand>
 {

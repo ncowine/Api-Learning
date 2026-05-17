@@ -53,22 +53,28 @@ tests/
 ```
 
 Project refs (compiler-enforced): `Domain <- Application <- Infrastructure <- Api`.
+Application also references `Contracts` for the wire DTOs + route constants.
 
 ## Adding a feature slice
 
-One folder under `src/Testers.Application/Features/<Area>/<UseCase>/`:
+Wire shape (anything a client would consume) goes in `Testers.Contracts`. Server-only
+artifacts (Command, Validator, Handler, Endpoint) go in `Testers.Application`.
 
 ```
-DoSomethingRequest.cs    HTTP body DTO
-DoSomethingCommand.cs    record : ICommand<DoSomethingResult>
-DoSomethingResult.cs     response DTO
-DoSomethingValidator.cs  AbstractValidator<DoSomethingCommand>
-DoSomethingHandler.cs    internal sealed : IRequestHandler<DoSomethingCommand, DoSomethingResult>
-DoSomethingEndpoint.cs   : IEndpoint
+src/Testers.Contracts/<Area>/
+  DoSomethingRequest.cs    HTTP body record
+  DoSomethingResult.cs     response record
+  Routes.cs                add route template + URL builder for this endpoint
+
+src/Testers.Application/Features/<Area>/DoSomething/
+  DoSomething.cs           Command record (: ICommand<Result>) + Validator class
+  DoSomethingHandler.cs    internal sealed : IRequestHandler<Command, Result>
+  DoSomethingEndpoint.cs   : IEndpoint; uses Routes.<Area>.SomethingTemplate, binds Request
 ```
 
-`AddApplication()` scans for the handler + validator; `EndpointScanner` maps the endpoint under
-`/api/v1`. No central registration. See `Features/Execution/ActionTaskRun/` as the reference.
+`AddApplication()` scans for the handler + validator. `EndpointScanner` maps the endpoint under
+`/api/v1`. No central registration. See `Features/Execution/ActionTaskRun/` + the matching
+`Testers.Contracts/Execution/` for the reference.
 
 ## Configuration
 

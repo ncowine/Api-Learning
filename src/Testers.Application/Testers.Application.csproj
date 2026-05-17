@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Testers.Domain\Testers.Domain.csproj" />
+    <ProjectReference Include="..\Testers.Contracts\Testers.Contracts.csproj" />
   </ItemGroup>
 
   <!-- Let test projects reach internal handler classes (e.g. ActionTaskRunHandler) -->
